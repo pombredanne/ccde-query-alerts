@@ -1,0 +1,33 @@
+queries:
+  - query_name: "first_query"
+    database: "analytics_dw"
+    schema: "analysis"
+    query: "select * from analytics_dw.partner_reports.QuinStreet_Lead_ID_Report"
+    channel: "#slack-test"
+    slack_message: "help! we need to look at the query"
+    cron_schedule: "0 12 * * *"
+  - query_name: "second_query"
+    database: "analytics_dw"
+    schema: "analysis"
+    query: "select *
+            from clearcover_dw.acquisition_public.renewal_notices rn
+            left join clearcover_dw.acquisition_public.renewal_notice_decisions rnd ON rnd.renewal_notice_id = rn.id
+            where rnd.id is NULL
+            and rn.open = 'f'"
+    channel: "#slack-test"
+    slack_message: "help! we need to look at the query"
+    cron_schedule: "0 13 * * *"
+  - query_name: "third_query"
+    database: "analytics_dw"
+    schema: "analysis"
+    query: "select * from analytics_dw.partner_reports.QuinStreet_Lead_ID_Report"
+    channel: "#slack-test"
+    slack_message: "help! we need to look at the query"
+    cron_schedule: "0 13 * * *"
+  - query_name: "fourth_query"
+    database: "analytics_dw"
+    schema: "analysis"
+    query: "select * from analytics_dw.partner_reports.QuinStreet_Lead_ID_Report"
+    channel: "#slack-test"
+    slack_message: "help! we need to look at the query"
+    cron_schedule: "0 13 * * *"
