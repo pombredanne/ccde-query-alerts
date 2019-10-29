@@ -10,10 +10,9 @@ from .custom_tasks.snowflakequery import SnowflakeExecution
 
 SNOWFLAKE_ACCOUNT = 'jh72176.us-east-1'
 SNOWFLAKE_USER = 'PREFECT_READ_ONLY'
-SNOWFLAKE_PW = Secret("SNOWFLAKE-READ-ONLY-USER-PW").get()
 SNOWFLAKE_ROLE = 'ANALYST_BASIC'
 SNOWFLAKE_WH = 'COMPUTE_WH'
-SLACK_WEBHOOK = Secret("QUERY-ALERT-SLACK-WH").get()
+
 
 with open("query_config.yaml", 'r') as stream:
     data_loaded = yaml.safe_load(stream)
@@ -30,6 +29,7 @@ for cron in crons:
 
     @task
     def slack_query_alert(row_count, report):
+        SLACK_WEBHOOK = Secret("QUERY-ALERT-SLACK-WH").get()
         if row_count > 0:
             slack_config = {"CHANNELS":
                                 {"slack":
@@ -45,6 +45,7 @@ for cron in crons:
             kawasemi.send(message)
 
     with Flow(flow_name, schedule) as flow:
+        SNOWFLAKE_PW = Secret("SNOWFLAKE-READ-ONLY-USER-PW").get()
         for r in reports:
             if r['cron_schedule'] == cron:
                 query = SnowflakeExecution(
