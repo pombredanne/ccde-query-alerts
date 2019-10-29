@@ -16,7 +16,7 @@ SNOWFLAKE_ROLE = 'ANALYST_BASIC'
 SNOWFLAKE_WH = 'COMPUTE_WH'
 
 
-with open("/query_config.yaml"), 'r') as stream:
+with open("/query_config.yaml", 'r') as stream:
     data_loaded = yaml.safe_load(stream)
 reports = data_loaded['queries']
 
