@@ -110,5 +110,3 @@ with Flow('query_alerts') as flow:
         # ex = execute_snowflake_query(sch, db, q)
         # row_count = ex[0]
         # alert = slack_query_alert(row_count, r)
-
-flow.run()
