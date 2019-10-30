@@ -17,13 +17,13 @@ SNOWFLAKE_WH = 'COMPUTE_WH'
 
 
 @task
-def slack_query_alert(row_count):
-    SLACK_WEBHOOK = Secret("QUERY-ALERT-SLACK-WH").get()
+def slack_query_alert(row_count, webhook):
+
     if row_count > 0:
         slack_config = {"CHANNELS":
                             {"slack":
                                  {"_backend": "kawasemi.backends.slack.SlackChannel",
-                                  "url": SLACK_WEBHOOK,
+                                  "url": webhook,
                                   "username": "Snowflake Query Alert",
                                   "channel": '#slack-test'}
                              }
@@ -44,6 +44,7 @@ with Flow('test') as flow:
         role='ANALYST_BASIC',
         warehouse='COMPUTE_WH',
         query='select * from analytics_dw.partner_reports.QuinStreet_Lead_ID_Report')
+    SLACK_WEBHOOK = Secret("QUERY-ALERT-SLACK-WH")
+    # alert = slack_query_alert(query[0], SLACK_WEBHOOK)
 
-    alert = slack_query_alert(query[0])
-
+# print(is_serializable(flow))
