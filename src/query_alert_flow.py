@@ -33,13 +33,11 @@ def slack_query_alert(row_count, report):
 
 
 with Flow('test') as flow:
-    pw = Secret("SNOWFLAKE-READ-ONLY-USER-PW").get()
     for r in reports:
 
         query = SnowflakeExecution(
             SNOWFLAKE_ACCOUNT,
             SNOWFLAKE_USER,
-            pw,
             database=r.get('database', ''),
             schema=r.get('schema', ''),
             role=SNOWFLAKE_ROLE,
@@ -47,6 +45,4 @@ with Flow('test') as flow:
             query=r.get('query', ''))
 
         alert = slack_query_alert(query[0], r)
-
-flow.run()
 
