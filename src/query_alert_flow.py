@@ -7,7 +7,7 @@ from prefect.schedules.clocks import CronClock
 import snowflake.connector as sf
 
 
-with open("query_config.yaml", 'r') as stream:
+with open("src/query_config.yaml", 'r') as stream:
     data_loaded = yaml.safe_load(stream)
 reports = data_loaded['queries']
 
