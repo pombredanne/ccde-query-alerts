@@ -11,8 +11,6 @@ SNOWFLAKE_USER = 'PREFECT_READ_ONLY'
 SNOWFLAKE_ROLE = 'ANALYST_BASIC'
 SNOWFLAKE_WH = 'COMPUTE_WH'
 
-reports = [{'query_name': 'first_query', 'database': 'analytics_dw', 'schema': 'analysis', 'query': 'select * from analytics_dw.partner_reports.QuinStreet_Lead_ID_Report', 'channel': '#slack-test', 'slack_message': 'help! we need to look at the query', 'cron_schedule': '0 12 * * *'}, {'query_name': 'second_query', 'database': 'analytics_dw', 'schema': 'analysis', 'query': "select * from clearcover_dw.acquisition_public.renewal_notices rn left join clearcover_dw.acquisition_public.renewal_notice_decisions rnd ON rnd.renewal_notice_id = rn.id where rnd.id is NULL and rn.open = 'f'", 'channel': '#slack-test', 'slack_message': 'help! we need to look at the query', 'cron_schedule': '0 13 * * *'}, {'query_name': 'third_query', 'database': 'analytics_dw', 'schema': 'analysis', 'query': 'select * from analytics_dw.partner_reports.QuinStreet_Lead_ID_Report', 'channel': '#slack-test', 'slack_message': 'help! we need to look at the query', 'cron_schedule': '0 13 * * *'}, {'query_name': 'fourth_query', 'database': 'analytics_dw', 'schema': 'analysis', 'query': 'select * from analytics_dw.partner_reports.QuinStreet_Lead_ID_Report', 'channel': '#slack-test', 'slack_message': 'help! we need to look at the query', 'cron_schedule': '0 13 * * *'}]
-
 
 @task
 def slack_query_alert(row_count, report):
@@ -23,26 +21,23 @@ def slack_query_alert(row_count, report):
                                  {"_backend": "kawasemi.backends.slack.SlackChannel",
                                   "url": SLACK_WEBHOOK,
                                   "username": "Snowflake Query Alert",
-                                  "channel": r['channel']}
+                                  "channel": '#slack-test'}
                              }
                         }
         kawasemi = Kawasemi(slack_config)
-        message = 'Alert for: ' + report['query_name'] + '\n' + \
-                  report['slack_message'] + '\n' + "Current row count is " + str(row_count)
+        message = 'do something'
         kawasemi.send(message)
 
 
 with Flow('test') as flow:
-    for r in reports:
+    query = SnowflakeExecution(
+        SNOWFLAKE_ACCOUNT,
+        SNOWFLAKE_USER,
+        database='analytics_dw',
+        schema='partner_reports',
+        role=SNOWFLAKE_ROLE,
+        warehouse=SNOWFLAKE_WH,
+        query='select * from analytics_dw.partner_reports.QuinStreet_Lead_ID_Report')
 
-        query = SnowflakeExecution(
-            SNOWFLAKE_ACCOUNT,
-            SNOWFLAKE_USER,
-            database=r.get('database', ''),
-            schema=r.get('schema', ''),
-            role=SNOWFLAKE_ROLE,
-            warehouse=SNOWFLAKE_WH,
-            query=r.get('query', ''))
-
-        alert = slack_query_alert(query[0], r)
+    alert = slack_query_alert(query[0], r)
 
