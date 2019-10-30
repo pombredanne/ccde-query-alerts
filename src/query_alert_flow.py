@@ -39,5 +39,5 @@ with Flow('test') as flow:
         warehouse=SNOWFLAKE_WH,
         query='select * from analytics_dw.partner_reports.QuinStreet_Lead_ID_Report')
 
-    alert = slack_query_alert(query[0], r)
+    alert = slack_query_alert(query[0])
 
