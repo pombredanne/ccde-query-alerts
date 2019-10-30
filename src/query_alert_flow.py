@@ -11,9 +11,13 @@ import sqlalchemy
 import pandas as pd
 
 
-with open("src/query_config.yaml", 'r') as stream:
-    data_loaded = yaml.safe_load(stream)
-reports = data_loaded['queries']
+@task
+def get_queries():
+    with open("src/query_config.yaml", 'r') as stream:
+        data_loaded = yaml.safe_load(stream)
+    reports = data_loaded['queries']
+    return reports[0]
+
 
 @task
 def getDates():
@@ -60,15 +64,15 @@ def getData(dates):
         return data
 
 @task
-def execute_snowflake_query(schema, database, query):
+def execute_snowflake_query(di):
     s = Secret("SNOWFLAKE-READ-ONLY-USER-PW")
     password = s.get()
     connect_params = {
         "account": 'jh72176.us-east-1',
         "user": 'PREFECT_READ_ONLY',
         "password": password,
-        "database": database,
-        "schema": schema,
+        "database": di.get('database',''),
+        "schema": di.get('schema'),
         "role": 'ANALYST_BASIC',
         "warehouse": 'COMPUTE_WH',
     }
@@ -76,7 +80,7 @@ def execute_snowflake_query(schema, database, query):
     try:
         with conn:
             cursor = conn.cursor()
-            executed = cursor.execute(query)
+            executed = cursor.execute(di.get('query', ''))
             row_count = executed.rowcount
         conn.close()
         return row_count, executed
@@ -105,12 +109,11 @@ def slack_query_alert(row_count, report):
 
 
 with Flow('query_alerts') as flow:
-    for r in reports:
-        db = r.get('database', '')
-        sch = r.get('schema', '')
-        q = r.get('query', '')
-        dates = getDates()
-        data = getData(dates)
-        # ex = execute_snowflake_query(sch, db, q)
-        # row_count = ex[0]
-        # alert = slack_query_alert(ex[0], r)
+    # queries = get_queries()
+    # ex = execute_snowflake_query(queries)
+    # slack_query_alert(ex[0], queries)
+    dates = getDates()
+    data = getData(dates)
+    # ex = execute_snowflake_query(sch, db, q)
+    # row_count = ex[0]
+    # alert = slack_query_alert(ex[0], r)
