@@ -28,6 +28,7 @@ class SnowflakeExecution(Task):
             self,
             account: str,
             user: str,
+            password: str,
             database: str = None,
             schema: str = None,
             role: str = None,
@@ -39,7 +40,7 @@ class SnowflakeExecution(Task):
     ):
         self.account = account
         self.user = user
-        self.password = Secret("SNOWFLAKE-READ-ONLY-USER-PW")
+        self.password = password
         self.database = database
         self.schema = schema
         self.role = role

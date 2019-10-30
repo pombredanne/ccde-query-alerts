@@ -3,6 +3,8 @@ from prefect import Flow, task
 from prefect.client import Secret
 from prefect.schedules import Schedule
 from prefect.schedules.clocks import CronClock
+from prefect.utilities.debug import is_serializable
+from prefect.tasks.snowflake import SnowflakeQuery
 
 from .custom_tasks.snowflakequery import SnowflakeExecution
 
@@ -10,6 +12,10 @@ SNOWFLAKE_ACCOUNT = 'jh72176.us-east-1'
 SNOWFLAKE_USER = 'PREFECT_READ_ONLY'
 SNOWFLAKE_ROLE = 'ANALYST_BASIC'
 SNOWFLAKE_WH = 'COMPUTE_WH'
+
+@task
+def print_name():
+    print('hi mom')
 
 
 @task
@@ -30,13 +36,15 @@ def slack_query_alert(row_count):
 
 
 with Flow('test') as flow:
-    query = SnowflakeExecution(
-        SNOWFLAKE_ACCOUNT,
-        SNOWFLAKE_USER,
+    s = Secret("SNOWFLAKE-READ-ONLY-USER-PW")
+    query = SnowflakeQuery(
+        'jh72176.us-east-1',
+        'PREFECT_READ_ONLY',
+        s,
         database='analytics_dw',
         schema='partner_reports',
-        role=SNOWFLAKE_ROLE,
-        warehouse=SNOWFLAKE_WH,
+        role='ANALYST_BASIC',
+        warehouse='COMPUTE_WH',
         query='select * from analytics_dw.partner_reports.QuinStreet_Lead_ID_Report')
 
     alert = slack_query_alert(query[0])
