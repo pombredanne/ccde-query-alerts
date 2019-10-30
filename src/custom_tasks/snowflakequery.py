@@ -1,6 +1,7 @@
 import snowflake.connector as sf
 from prefect import Task
 from prefect.utilities.tasks import defaults_from_attrs
+from prefect.client import Secret
 
 
 class SnowflakeExecution(Task):
@@ -11,7 +12,6 @@ class SnowflakeExecution(Task):
         - account (str): snowflake account name, see snowflake connector
              package documentation for details
         - user (str): user name used to authenticate
-        - password (str): password used to authenticate
         - database (str, optional): name of the default database to use
         - schema (int, optional): name of the default schema to use
         - role (str, optional): name of the default role to use
@@ -28,7 +28,6 @@ class SnowflakeExecution(Task):
             self,
             account: str,
             user: str,
-            password: str,
             database: str = None,
             schema: str = None,
             role: str = None,
@@ -40,7 +39,7 @@ class SnowflakeExecution(Task):
     ):
         self.account = account
         self.user = user
-        self.password = password
+        self.password = Secret("SNOWFLAKE-READ-ONLY-USER-PW").get()
         self.database = database
         self.schema = schema
         self.role = role
