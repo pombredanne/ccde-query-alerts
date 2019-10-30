@@ -47,12 +47,15 @@ for cron in crons:
             kawasemi.send(message)
 
     with Flow(flow_name, schedule) as flow:
+        pw = Secret("SNOWFLAKE-READ-ONLY-USER-PW")
         for r in reports:
+
             if r['cron_schedule'] == cron:
+
                 query = SnowflakeExecution(
                     SNOWFLAKE_ACCOUNT,
                     SNOWFLAKE_USER,
-                    Secret("SNOWFLAKE-READ-ONLY-USER-PW").get(),
+                    pw,
                     database=r.get('database', ''),
                     schema=r.get('schema', ''),
                     role=SNOWFLAKE_ROLE,
