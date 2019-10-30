@@ -2,7 +2,7 @@ import yaml
 
 from kawasemi import Kawasemi
 from prefect import Flow, task
-from prefect.client import Secret
+from prefect.client.secrets import Secret
 from prefect.schedules import Schedule
 from prefect.schedules.clocks import CronClock
 
