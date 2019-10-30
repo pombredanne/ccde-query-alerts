@@ -1,6 +1,6 @@
 from kawasemi import Kawasemi
 from prefect import Flow, task
-from prefect.client import Secret
+from prefect.tasks.secrets.base import Secret
 from prefect.schedules import Schedule
 from prefect.schedules.clocks import CronClock
 from prefect.utilities.debug import is_serializable
