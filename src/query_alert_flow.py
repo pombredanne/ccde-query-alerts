@@ -85,7 +85,7 @@ def load(y):
     print("Received y: {}".format(y))
 
 
-with Flow("ETL") as flow:
+with Flow("ETL-test") as flow:
     e = extract()
     t = transform(e)
     l = load(t)
