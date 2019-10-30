@@ -13,7 +13,7 @@ SNOWFLAKE_WH = 'COMPUTE_WH'
 
 
 @task
-def slack_query_alert(row_count, report):
+def slack_query_alert(row_count):
     SLACK_WEBHOOK = Secret("QUERY-ALERT-SLACK-WH").get()
     if row_count > 0:
         slack_config = {"CHANNELS":
