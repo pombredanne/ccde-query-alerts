@@ -6,7 +6,7 @@ from prefect.schedules.clocks import CronClock
 from prefect.utilities.debug import is_serializable
 from prefect.tasks.snowflake import SnowflakeQuery
 
-# from .custom_tasks.snowflakequery import SnowflakeExecution
+from custom_tasks.snowflakequery import SnowflakeExecution
 
 SNOWFLAKE_ACCOUNT = 'jh72176.us-east-1'
 SNOWFLAKE_USER = 'PREFECT_READ_ONLY'
@@ -35,7 +35,7 @@ def slack_query_alert(row_count):
 
 with Flow('test') as flow:
     s = Secret("SNOWFLAKE-READ-ONLY-USER-PW")
-    query = SnowflakeQuery(
+    query = SnowflakeExecution(
         'jh72176.us-east-1',
         'PREFECT_READ_ONLY',
         s,
@@ -45,5 +45,5 @@ with Flow('test') as flow:
         warehouse='COMPUTE_WH',
         query='select * from analytics_dw.partner_reports.QuinStreet_Lead_ID_Report')
 
-    # alert = slack_query_alert(query[0])
+    alert = slack_query_alert(query[0])
 
