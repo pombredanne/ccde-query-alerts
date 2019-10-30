@@ -4,7 +4,7 @@ from prefect.client import Secret
 from prefect.schedules import Schedule
 from prefect.schedules.clocks import CronClock
 
-from custom_tasks.snowflakequery import SnowflakeExecution
+from .custom_tasks.snowflakequery import SnowflakeExecution
 
 SNOWFLAKE_ACCOUNT = 'jh72176.us-east-1'
 SNOWFLAKE_USER = 'PREFECT_READ_ONLY'
