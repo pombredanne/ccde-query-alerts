@@ -1,3 +1,4 @@
+from datetime import date, datetime, timedelta
 import yaml
 
 from kawasemi import Kawasemi
@@ -6,8 +7,11 @@ from prefect.client import Secret
 from prefect.schedules import Schedule
 from prefect.schedules.clocks import CronClock
 import snowflake.connector as sf
+import sqlalchemy
+import pandas as pd
 
-with open("query_config.yaml", 'r') as stream:
+
+with open("src/query_config.yaml", 'r') as stream:
     data_loaded = yaml.safe_load(stream)
 reports = data_loaded['queries']
 
@@ -109,4 +113,4 @@ with Flow('query_alerts') as flow:
         data = getData(dates)
         # ex = execute_snowflake_query(sch, db, q)
         # row_count = ex[0]
-        # alert = slack_query_alert(row_count, r)
+        # alert = slack_query_alert(ex[0], r)
