@@ -1,50 +1,44 @@
+import yaml
+
 from kawasemi import Kawasemi
 from prefect import Flow, task
-from prefect.tasks.secrets.base import Secret
+from prefect.client import Secret
 from prefect.schedules import Schedule
 from prefect.schedules.clocks import CronClock
-from prefect.utilities.debug import is_serializable
-from prefect.tasks.snowflake import SnowflakeQuery
 
 from .custom_tasks.snowflakequery import SnowflakeExecution
 
 SNOWFLAKE_ACCOUNT = 'jh72176.us-east-1'
 SNOWFLAKE_USER = 'PREFECT_READ_ONLY'
+SNOWFLAKE_PW = Secret("SNOWFLAKE-READ-ONLY-USER-PW").get()
 SNOWFLAKE_ROLE = 'ANALYST_BASIC'
 SNOWFLAKE_WH = 'COMPUTE_WH'
+SLACK_WEBHOOK = Secret("QUERY-ALERT-SLACK-WH").get()
 
+with open("query_config.yaml", 'r') as stream:
+    data_loaded = yaml.safe_load(stream)
+reports = data_loaded['queries']
 
+crons = set()
+for r in reports:
+    crons.add(r.get('cron_schedule', ''))
 
+for cron in crons:
+    schedule = Schedule(clocks=[CronClock(cron)])
+    schedule.next(5)
+    flow_name = 'query_executions-' + cron
 
-@task
-def slack_query_alert(row_count, webhook):
+    with Flow(flow_name) as flow:
+        for r in reports:
+            if r['cron_schedule'] == cron:
+                query = SnowflakeExecution(
+                    SNOWFLAKE_ACCOUNT,
+                    SNOWFLAKE_USER,
+                    SNOWFLAKE_PW,
+                    database=r.get('database', ''),
+                    schema=r.get('schema', ''),
+                    role=SNOWFLAKE_ROLE,
+                    warehouse=SNOWFLAKE_WH,
+                    query=r.get('query', ''))
 
-    if row_count > 0:
-        slack_config = {"CHANNELS":
-                            {"slack":
-                                 {"_backend": "kawasemi.backends.slack.SlackChannel",
-                                  "url": webhook,
-                                  "username": "Snowflake Query Alert",
-                                  "channel": '#slack-test'}
-                             }
-                        }
-        kawasemi = Kawasemi(slack_config)
-        message = 'do something'
-        kawasemi.send(message)
-
-
-with Flow('test') as flow:
-    s = Secret("SNOWFLAKE-READ-ONLY-USER-PW")
-    query = SnowflakeExecution(
-        'jh72176.us-east-1',
-        'PREFECT_READ_ONLY',
-        s,
-        database='analytics_dw',
-        schema='partner_reports',
-        role='ANALYST_BASIC',
-        warehouse='COMPUTE_WH',
-        query='select * from analytics_dw.partner_reports.QuinStreet_Lead_ID_Report')
-    SLACK_WEBHOOK = Secret("QUERY-ALERT-SLACK-WH")
-    # alert = slack_query_alert(query[0], SLACK_WEBHOOK)
-
-# print(is_serializable(flow))
+                row_count = query[0]
