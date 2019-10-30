@@ -39,7 +39,7 @@ class SnowflakeExecution(Task):
     ):
         self.account = account
         self.user = user
-        self.password = Secret("SNOWFLAKE-READ-ONLY-USER-PW").get()
+        self.password = Secret("SNOWFLAKE-READ-ONLY-USER-PW")
         self.database = database
         self.schema = schema
         self.role = role
