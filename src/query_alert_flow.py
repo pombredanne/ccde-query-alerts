@@ -6,7 +6,7 @@ from prefect.schedules.clocks import CronClock
 from prefect.utilities.debug import is_serializable
 from prefect.tasks.snowflake import SnowflakeQuery
 
-from custom_tasks.snowflakequery import SnowflakeExecution
+from .custom_tasks.snowflakequery import SnowflakeExecution
 
 SNOWFLAKE_ACCOUNT = 'jh72176.us-east-1'
 SNOWFLAKE_USER = 'PREFECT_READ_ONLY'
