@@ -68,5 +68,3 @@ with Flow('query_alerts') as flow:
     queries = get_queries()
     executions = execute_snowflake_query.map(queries)
     send_alerts = slack_query_alert.map(executions)
-
-flow.run()
