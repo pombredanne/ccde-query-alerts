@@ -38,7 +38,13 @@ queries:
   - query_name: "Renewal notices not generated for policies expiring in 40 days"
     database: "analytics_dw"
     schema: "analysis"
-    query: "select * from analytics_dw.partner_reports.QuinStreet_Lead_ID_Report"
+    query: "SELECT *
+            FROM clearcover_dw.oneinc.policyterm AS policyterm
+            INNER JOIN clearcover_dw.oneinc.policy ON clearcover_dw.oneinc.policy.policyid = policyterm.policyid
+            LEFT JOIN clearcover_dw.acquisition_public.renewal_notices ON clearcover_dw.acquisition_public.renewal_notices.policy_id = policy.policyid
+            WHERE expirationdate <= current_timestamp + interval '40 days'
+            AND clearcover_dw.acquisition_public.renewal_notices.policy_id IS NULL
+            AND isInitialized = 't'"
     channel: "#slack-test"
   - query_name: "No decision and no renewed expiring in the next 40 days"
     database: "clearcover_dw"
