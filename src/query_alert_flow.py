@@ -10,12 +10,12 @@ import snowflake.connector as sf
 
 @task
 def get_queries():
-    sys.path.append(os.getcwd())
-    with open("query_config.yaml", 'r') as stream:
-        data_loaded = yaml.safe_load(stream)
-    reports = data_loaded['queries']
-    return reports
-
+    # sys.path.append(os.getcwd())
+    # with open("query_config.yaml", 'r') as stream:
+    #     data_loaded = yaml.safe_load(stream)
+    # reports = data_loaded['queries']
+    # return reports
+    return [{'query_name': 'first_query', 'database': 'analytics_dw', 'schema': 'analysis', 'query': 'select * from analytics_dw.partner_reports.QuinStreet_Lead_ID_Report', 'channel': '#slack-test', 'slack_message': 'help! we need to look at the query', 'cron_schedule': '0 12 * * *'}, {'query_name': 'second_query', 'database': 'analytics_dw', 'schema': 'analysis', 'query': 'select * from analytics_dw.partner_reports.QuinStreet_Lead_ID_Report', 'channel': '#slack-test', 'slack_message': 'help! we need to look at the query', 'cron_schedule': '0 12 * * *'}, {'query_name': 'third_query', 'database': 'analytics_dw', 'schema': 'analysis', 'query': 'select * from analytics_dw.partner_reports.QuinStreet_Lead_ID_Report', 'channel': '#slack-test', 'slack_message': 'help! we need to look at the query', 'cron_schedule': '0 12 * * *'}]
 
 @task
 def execute_snowflake_query(report):
