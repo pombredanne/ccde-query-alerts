@@ -7,7 +7,7 @@ queries:
             left join clearcover_dw.acquisition_public.renewal_notice_decisions rnd ON rnd.renewal_notice_id = rn.id
             where rnd.id is NULL
             and rn.open = 'f'"
-    channel: "#slack-test"
+    channel: "#renewal-tech"
   - query_name: "Renewals records appear stale"
     database: "clearcover_dw"
     schema: "acquisition_public"
@@ -15,7 +15,7 @@ queries:
             from (select max(expired_at) as max_expired_at from
             clearcover_dw.acquisition_public.renewal_notices ) a
             where DATEDIFF(day, current_timestamp, max_expired_at) < 28"
-    channel: "#slack-test"
+    channel: "#renewal-tech"
   - query_name: "NonRenewals with no physical mail sent"
     database: "analytics_dw"
     schema: "analysis"
@@ -23,7 +23,7 @@ queries:
             from clearcover_dw.acquisition_public.renewal_notice_Decisions
             where physical_mail_sent_at IS NULL
             AND decision = 'non_renew'AND created_at > '2019-04-24'"
-    channel: "#slack-test"
+    channel: "#renewal-tech"
   - query_name: "NonRenewals with  physical mail sent but not on time"
     database: "analytics_dw"
     schema: "analysis"
@@ -34,7 +34,7 @@ queries:
             where
                   (decision = 'non_renew' ) AND datediff(day, physical_mail_sent_at, expired_at) < 30
             AND renewal_notices.created_at > '2019-01-25T11:05:32-06:00'"
-    channel: "#slack-test"
+    channel: "#renewal-tech"
   - query_name: "Renewal notices not generated for policies expiring in 40 days"
     database: "analytics_dw"
     schema: "analysis"
@@ -45,21 +45,21 @@ queries:
             WHERE expirationdate <= current_timestamp + interval '40 days'
             AND clearcover_dw.acquisition_public.renewal_notices.policy_id IS NULL
             AND isInitialized = 't'"
-    channel: "#slack-test"
+    channel: "#renewal-tech"
   - query_name: "No decision and no renewed expiring in the next 40 days"
     database: "clearcover_dw"
     schema: "oneinc"
     query: "SELECT *
             FROM clearcover_dw.oneinc.policyterm AS pt
-            LEFT JOIN clearcover_dw.oneinc.policyrenewalstatus as prts ON prts.policyrenewalstatusid = pt.policyrenewalstatusid--
+            LEFT JOIN clearcover_dw.oneinc.policyrenewalstatus as prts ON prts.policyrenewalstatusid = pt.policyrenewalstatusid
             LEFT JOIN clearcover_dw.acquisition_public.renewal_notice_decisions AS rnd ON rnd.current_policy_term_id = pt.policytermid
             LEFT JOIN clearcover_dw.oneinc.currentpolicytermstaus AS cpts ON cpts.policytermid = pt.policytermid
             LEFT JOIN clearcover_dw.oneinc.policytermstatus AS pts ON pts.policytermstatusid = cpts.policytermstatusid
             WHERE
                   pt.expirationdate < DATEADD( day,39, current_date )
               AND rnd.decision is NULL
-              AND prts.policyrenewalstatusname ='NonRenewed';"
-    channel: "#slack-test"
+              AND prts.policyrenewalstatusname ='NonRenewed'"
+    channel: "#renewal-tech"
   - query_name: "No decision and expiring in the next 24 days "
     database: "clearcover_dw"
     schema: "oneinc"
@@ -69,7 +69,7 @@ queries:
             LEFT JOIN clearcover_dw.oneinc.currentpolicytermstaus AS cpts ON cpts.policytermid = pt.policytermid
             LEFT JOIN clearcover_dw.oneinc.policytermstatus AS pts ON pts.policytermstatusid = cpts.policytermstatusid
             WHERE pt.expirationdate > current_date AND pt.expirationdate <= DATEADD(day, 24,current_date) AND rnd.decision is NULL AND pts.policytermstatusname != 'NotWritten' AND pt.policytermid != 23337"
-    channel: "#slack-test"
+    channel: "#renewal-tech"
   - query_name: "Renewals not sent on time "
     database: "clearcover_dw"
     schema: "acquisition_public"
@@ -82,7 +82,7 @@ queries:
             AND renewal_notices.current_policy_term_id <> '23002'
             and expired_at <= current_timestamp
             AND renewal_notices.created_at > '2019-06-07T11:05:32-06:00'"
-    channel: "#slack-test"
+    channel: "#renewal-tech"
   - query_name: "Renewals with no physical mail or customer IO sent"
     database: "clearcover_dw"
     schema: "acquisition_public"
@@ -93,7 +93,7 @@ queries:
             AND decision = 'renew'
             AND renewal_notices.created_at >= '2019-07-27T11:08:32-06:00'
             AND DATEADD(day, -25, expired_at) < current_timestamp"
-    channel: "#slack-test"
+    channel: "#renewal-tech"
   - query_name: "Clients with no email on CC side"
     database: "clearcover_dw"
     schema: "acquisition_public"
@@ -109,7 +109,7 @@ queries:
             WHERE cc_customer.email IS NULL
               AND pts.policytermstatusname = 'Active'
             ORDER BY oi_policy.created DESC"
-    channel: "#slack-test"
+    channel: "#renewal-tech"
   - query_name: "Reason for missing CC email"
     database: "clearcover_dw"
     schema: "acquisition_public"
@@ -129,7 +129,7 @@ queries:
             WHERE cc_customer.email IS NULL
               AND pts.policytermstatusname = 'Active'
             ORDER BY oi_policy.created DESC"
-    channel: "#slack-test"
+    channel: "#renewal-tech"
   - query_name: "Emails Dont Match"
     database: "clearcover_dw"
     schema: "acquisition_public"
@@ -218,4 +218,4 @@ queries:
             where ((lagged_email.email != lagged_email_column
             or lagged_email_column is null) and LOWER(lagged_email.last_email) != LOWER(cc_customer.email) and lagged_email.last_email = lagged_email.email)
             order by endorsement_created_at desc"
-    channel: "#slack-test"
+    channel: "#renewal-tech"
