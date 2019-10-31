@@ -1,3 +1,5 @@
+import os
+import sys
 import yaml
 
 from kawasemi import Kawasemi
@@ -8,6 +10,7 @@ import snowflake.connector as sf
 
 @task
 def get_queries():
+    sys.path.append(os.getcwd())
     with open("query_config.yaml", 'r') as stream:
         data_loaded = yaml.safe_load(stream)
     reports = data_loaded['queries']
@@ -65,3 +68,5 @@ with Flow('query_alerts') as flow:
     queries = get_queries()
     executions = execute_snowflake_query.map(queries)
     send_alerts = slack_query_alert.map(executions)
+
+flow.run()
