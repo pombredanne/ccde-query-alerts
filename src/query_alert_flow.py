@@ -3,8 +3,12 @@ import yaml
 from kawasemi import Kawasemi
 from prefect import Flow, task
 from prefect.client import Secret
+from prefect.schedules import Schedule
+from prefect.schedules.clocks import CronClock
 import snowflake.connector as sf
 
+schedule = Schedule(clocks=[CronClock("0 13 * * *")])
+schedule.next(5)
 
 @task
 def get_queries():
@@ -60,7 +64,7 @@ def slack_query_alert(query_execution):
         kawasemi.send(message)
 
 
-with Flow('query_alerts') as flow:
+with Flow('query_alerts', schedule) as flow:
     queries = get_queries()
     executions = execute_snowflake_query.map(queries)
     send_alerts = slack_query_alert.map(executions)
