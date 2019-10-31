@@ -1,5 +1,3 @@
-import os
-import sys
 import yaml
 
 from kawasemi import Kawasemi
@@ -58,7 +56,7 @@ def slack_query_alert(query_execution):
                         }
         kawasemi = Kawasemi(slack_config)
         message = 'Alert for: ' + report['query_name'] + '\n' + \
-                  report['slack_message'] + '\n' + "Current row count is " + str(row_count)
+                  "Current row count is " + str(row_count)
         kawasemi.send(message)
 
 

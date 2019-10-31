@@ -1,22 +1,215 @@
 queries:
-  - query_name: "first_query"
+  - query_name: "Renewal Notice Closed with no Decision"
+    database: "clearcover_dw"
+    schema: "acquisition_public"
+    query: "select *
+            from clearcover_dw.acquisition_public.renewal_notices rn
+            left join clearcover_dw.acquisition_public.renewal_notice_decisions rnd ON rnd.renewal_notice_id = rn.id
+            where rnd.id is NULL
+            and rn.open = 'f'"
+    channel: "#slack-test"
+  - query_name: "Renewals records appear stale"
+    database: "clearcover_dw"
+    schema: "acquisition_public"
+    query: "select *
+            from (select max(expired_at) as max_expired_at from
+            clearcover_dw.acquisition_public.renewal_notices ) a
+            where DATEDIFF(day, current_timestamp, max_expired_at) < 28"
+    channel: "#slack-test"
+  - query_name: "NonRenewals with no physical mail sent"
+    database: "analytics_dw"
+    schema: "analysis"
+    query: "select *
+            from clearcover_dw.acquisition_public.renewal_notice_Decisions
+            where physical_mail_sent_at IS NULL
+            AND decision = 'non_renew'AND created_at > '2019-04-24'"
+    channel: "#slack-test"
+  - query_name: "NonRenewals with  physical mail sent but not on time"
+    database: "analytics_dw"
+    schema: "analysis"
+    query: "select  *
+            from clearcover_dw.acquisition_public.renewal_notices
+                   LEFT JOIN clearcover_dw.acquisition_public.renewal_notice_decisions
+            ON renewal_notices.id = renewal_notice_decisions.renewal_notice_id
+            where
+                  (decision = 'non_renew' ) AND datediff(day, physical_mail_sent_at, expired_at) < 30
+            AND renewal_notices.created_at > '2019-01-25T11:05:32-06:00'"
+    channel: "#slack-test"
+  - query_name: "Renewal notices not generated for policies expiring in 40 days"
     database: "analytics_dw"
     schema: "analysis"
     query: "select * from analytics_dw.partner_reports.QuinStreet_Lead_ID_Report"
     channel: "#slack-test"
-    slack_message: "help! we need to look at the query"
-    cron_schedule: "0 12 * * *"
-  - query_name: "second_query"
-    database: "analytics_dw"
-    schema: "analysis"
-    query: "select * from analytics_dw.partner_reports.QuinStreet_Lead_ID_Report"
+  - query_name: "No decision and no renewed expiring in the next 40 days"
+    database: "clearcover_dw"
+    schema: "oneinc"
+    query: "SELECT *
+            FROM clearcover_dw.oneinc.policyterm AS pt
+            LEFT JOIN clearcover_dw.oneinc.policyrenewalstatus as prts ON prts.policyrenewalstatusid = pt.policyrenewalstatusid--
+            LEFT JOIN clearcover_dw.acquisition_public.renewal_notice_decisions AS rnd ON rnd.current_policy_term_id = pt.policytermid
+            LEFT JOIN clearcover_dw.oneinc.currentpolicytermstaus AS cpts ON cpts.policytermid = pt.policytermid
+            LEFT JOIN clearcover_dw.oneinc.policytermstatus AS pts ON pts.policytermstatusid = cpts.policytermstatusid
+            WHERE
+                  pt.expirationdate < DATEADD( day,39, current_date )
+              AND rnd.decision is NULL
+              AND prts.policyrenewalstatusname ='NonRenewed';"
     channel: "#slack-test"
-    slack_message: "help! we need to look at the query"
-    cron_schedule: "0 12 * * *"
-  - query_name: "third_query"
-    database: "analytics_dw"
-    schema: "analysis"
-    query: "select * from analytics_dw.partner_reports.QuinStreet_Lead_ID_Report"
+  - query_name: "No decision and expiring in the next 24 days "
+    database: "clearcover_dw"
+    schema: "oneinc"
+    query: "SELECT * FROM clearcover_dw.oneinc.policyterm AS pt
+            LEFT JOIN clearcover_dw.oneinc.policyrenewalstatus as prts ON prts.policyrenewalstatusid = pt.policyrenewalstatusid
+            LEFT JOIN clearcover_dw.acquisition_public.renewal_notice_decisions AS rnd ON rnd.current_policy_term_id = pt.policytermid
+            LEFT JOIN clearcover_dw.oneinc.currentpolicytermstaus AS cpts ON cpts.policytermid = pt.policytermid
+            LEFT JOIN clearcover_dw.oneinc.policytermstatus AS pts ON pts.policytermstatusid = cpts.policytermstatusid
+            WHERE pt.expirationdate > current_date AND pt.expirationdate <= DATEADD(day, 24,current_date) AND rnd.decision is NULL AND pts.policytermstatusname != 'NotWritten' AND pt.policytermid != 23337"
     channel: "#slack-test"
-    slack_message: "help! we need to look at the query"
-    cron_schedule: "0 12 * * *"
+  - query_name: "Renewals not sent on time "
+    database: "clearcover_dw"
+    schema: "acquisition_public"
+    query: "select *
+            from clearcover_dw.acquisition_public.renewal_notices
+                   LEFT JOIN clearcover_dw.acquisition_public.renewal_notice_decisions
+            ON renewal_notices.id = renewal_notice_decisions.renewal_notice_id
+            where
+                  (decision = 'renew' ) AND DATEDIFF(day, customer_io_sent_at, expired_at) < 24.9
+            AND renewal_notices.current_policy_term_id <> '23002'
+            and expired_at <= current_timestamp
+            AND renewal_notices.created_at > '2019-06-07T11:05:32-06:00'"
+    channel: "#slack-test"
+  - query_name: "Renewals with no physical mail or customer IO sent"
+    database: "clearcover_dw"
+    schema: "acquisition_public"
+    query: "select *
+            from clearcover_dw.acquisition_public.renewal_notice_Decisions
+            INNER JOIN clearcover_dw.acquisition_public.renewal_notices ON renewal_notices.id = renewal_notice_decisions.renewal_notice_id
+            where customer_io_sent_at IS NULL AND physical_mail_sent_at IS NULL
+            AND decision = 'renew'
+            AND renewal_notices.created_at >= '2019-07-27T11:08:32-06:00'
+            AND DATEADD(day, -25, expired_at) < current_timestamp"
+    channel: "#slack-test"
+  - query_name: "Clients with no email on CC side"
+    database: "clearcover_dw"
+    schema: "acquisition_public"
+    query: "SELECT oi_policy.policyid, ONE_INC_QUOTE_ID AS QuoteID, oi_policy.created, oi_term.policynumber, cc_customer.email AS cc_email, oi_customer.email AS one_inc_email, pts.policytermstatusname AS pol_status
+            FROM clearcover_dw.acquisition_public.customers AS cc_customer
+            JOIN clearcover_dw.acquisition_public.customer_one_inc_policies AS cc_policy ON cc_policy.customer_id = cc_customer.id
+            RIGHT JOIN clearcover_dw.oneinc.policy AS oi_policy ON cc_policy.one_inc_policy_id = oi_policy.policyid
+            JOIN clearcover_dw.oneinc.personalcustomer AS oi_customer ON oi_customer.customerid = oi_policy.customerid
+            JOIN clearcover_dw.oneinc.policyterm AS oi_term ON oi_term.policyid = oi_policy.policyid
+            JOIN clearcover_dw.oneinc.currentpolicytermstaus AS policy_status ON policy_status.policytermid = oi_term.policytermid
+            RIGHT JOIN clearcover_dw.oneinc.policytermstatus AS pts ON pts.policytermstatusid = policy_status.policytermstatusid
+            LEFT JOIN (ANALYTICS_DW.ANALYSIS.BOUND_POLICY_QUOTES_AND_APPLICATIONS as oiqi) ON  oiqi.policy_number = oi_term.policynumber
+            WHERE cc_customer.email IS NULL
+              AND pts.policytermstatusname = 'Active'
+            ORDER BY oi_policy.created DESC"
+    channel: "#slack-test"
+  - query_name: "Reason for missing CC email"
+    database: "clearcover_dw"
+    schema: "acquisition_public"
+    query: "SELECT oi_term.policynumber, oi_term.policyid, old_policy.policyid as oldpolicyid, old_policy.policynumber AS old_policy_number, old_pts.policytermstatusname
+            FROM clearcover_dw.acquisition_public.customers AS cc_customer
+            JOIN clearcover_dw.acquisition_public.customer_one_inc_policies AS cc_policy ON cc_policy.customer_id = cc_customer.id
+            RIGHT JOIN clearcover_dw.oneinc.policy AS oi_policy ON cc_policy.one_inc_policy_id = oi_policy.policyid
+            JOIN clearcover_dw.oneinc.personalcustomer AS oi_customer ON oi_customer.customerid = oi_policy.customerid
+            JOIN clearcover_dw.oneinc.policyterm AS oi_term ON oi_term.policyid = oi_policy.policyid
+            JOIN clearcover_dw.oneinc.currentpolicytermstaus AS policy_status ON policy_status.policytermid = oi_term.policytermid
+            JOIN clearcover_dw.oneinc.policytermstatus AS pts ON pts.policytermstatusid = policy_status.policytermstatusid
+            LEFT JOIN clearcover_dw.acquisition_public.customers AS customer ON oi_customer.email = customer.email
+            LEFT JOIN clearcover_dw.acquisition_public.customer_one_inc_policies AS coip ON customer.id = coip.customer_id
+            LEFT JOIN clearcover_dw.oneinc.policyterm AS old_policy ON old_policy.policyid = coip.one_inc_policy_id
+            LEFT JOIN clearcover_dw.oneinc.currentpolicytermstaus AS old_policy_status ON old_policy_status.policytermid = old_policy.policytermid
+            LEFT JOIN clearcover_dw.oneinc.policytermstatus AS old_pts ON old_pts.policytermstatusid = old_policy_status.policytermstatusid
+            WHERE cc_customer.email IS NULL
+              AND pts.policytermstatusname = 'Active'
+            ORDER BY oi_policy.created DESC"
+    channel: "#slack-test"
+  - query_name: "Emails Dont Match"
+    database: "clearcover_dw"
+    schema: "acquisition_public"
+    query: "with endorsements_cleaned as (
+            select
+            p.policyid as policy_id,
+            pt.policytermid as policy_term_id,
+            pt.policynumber as policy_number,
+            p.created as policy_created_at,
+            pts.policytermstatusname as policy_term_status_name,
+            e.endorsementid as endorsement_id,
+            et.endorsementtypename as endorsement_type_name,
+            e.effectivedate as endorsement_effective_date,
+            e.created as endorsement_created_at,
+            ept.endorsementpolicytermid as endorsement_policy_term_id,
+            row_number() over(partition by p.policyid
+            order by e.effectivedate desc
+            , pt.policytermid desc
+            , e.endorsementid desc) as endorsement_rank
+            from clearcover_dw.oneinc.policy as p
+            join clearcover_dw.oneinc.policyterm as pt
+            on pt.policyid = p.policyid
+            join clearcover_dw.oneinc.endorsement as e
+            on e.policytermid = pt.policytermid
+            join clearcover_dw.oneinc.endorsementtype as et
+            on et.endorsementtypeid = e.endorsementtypeid
+            join clearcover_dw.oneinc.endorsementpolicyterm as ept
+            on ept.endorsementid = e.endorsementid
+            join clearcover_dw.oneinc.policytermstatus as pts
+            on pts.policytermstatusid = ept.policytermstatusid
+            join clearcover_dw.oneinc.policyrenewalstatus as prs
+            on prs.policyrenewalstatusid = pt.policyrenewalstatusid
+            where e.endorsementid not in (
+            select
+            e1.endorsementid
+            from clearcover_dw.oneinc.endorsement as e1
+            join clearcover_dw.oneinc.endorsement as e2
+            on e2.reappliedbyendorsementid = e1.endorsementid
+            join clearcover_dw.oneinc.endorsementpolicyterm as ept
+            on ept.endorsementid = e2.overlappedbyendorsementid
+            join clearcover_dw.oneinc.policytermstatus as pts
+            on pts.policytermstatusid = ept.policytermstatusid
+            join clearcover_dw.oneinc.policyterm as pt
+            on pt.policytermid = e1.policytermid
+
+            where pts.policytermstatusname in ('NotWritten', 'Cancelled')
+
+            )
+            and (e.endorsementid >= e.overlappedbyendorsementid or e.overlappedbyendorsementid is null)
+            and ept.policytermstatusid not in (5, 6)
+            and not (pts.policytermstatusname = 'NotWritten' and pt.renewalnumber > 0)
+            ),
+
+            base as (
+            select
+            ec.policy_id,
+            ec.policy_number,
+            ec.endorsement_id,
+            ec.endorsement_rank,
+            ec.endorsement_created_at,
+            ec.endorsement_effective_date,
+            ep.email,
+            ec.policy_term_status_name
+            from clearcover_dw.oneinc.endorsementpopulation as ep
+            join clearcover_dw.oneinc.endorsementdriver as ed
+            on ed.endorsementpopulationid = ep.endorsementpopulationid
+            join endorsements_cleaned as ec
+            on ec.endorsement_id = ed.endorsementid
+            where ed.relationtoapplicant = 9 and policy_term_status_name = 'Active'
+            and endorsement_rank = 1
+            ),
+
+            lagged_email as (
+            select
+            *,
+            lag(email) over(partition by policy_id order by endorsement_rank) as lagged_email_column,
+            first_value(email) over (partition by policy_id order by endorsement_created_at desc rows unbounded preceding) as last_email
+            from base
+            )
+
+            select
+            policy_id, policy_number, cc_customer.email as CC_email, lagged_email.last_email as OI_email, endorsement_created_at, policy_term_status_name
+            from lagged_email
+            join clearcover_dw.acquisition_public.customer_one_inc_policies AS cc_policy ON cc_policy.one_inc_policy_id = policy_id
+            join clearcover_dw.acquisition_public.customers AS cc_customer ON cc_customer.id = cc_policy.customer_id
+            where ((lagged_email.email != lagged_email_column
+            or lagged_email_column is null) and LOWER(lagged_email.last_email) != LOWER(cc_customer.email) and lagged_email.last_email = lagged_email.email)
+            order by endorsement_created_at desc"
+    channel: "#slack-test"
