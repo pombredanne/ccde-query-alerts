@@ -8,7 +8,7 @@ import snowflake.connector as sf
 
 @task
 def get_queries():
-    with open("src/query_config.yaml", 'r') as stream:
+    with open("/src/query_config.yaml", 'r') as stream:
         data_loaded = yaml.safe_load(stream)
     reports = data_loaded['queries']
     return reports
