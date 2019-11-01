@@ -113,7 +113,7 @@ queries:
   - query_name: "Reason for missing CC email"
     database: "clearcover_dw"
     schema: "acquisition_public"
-    query: "SELECT oi_term.policynumber, oi_term.policyid, old_policy.policyid as oldpolicyid, old_policy.policynumber AS old_policy_number, old_pts.policytermstatusname
+    query: "SELECT oi_term.policynumber, cc_customer.email AS cc_email, i_term.policyid, old_policy.policyid as oldpolicyid, old_policy.policynumber AS old_policy_number, old_pts.policytermstatusname
             FROM clearcover_dw.acquisition_public.customers AS cc_customer
             JOIN clearcover_dw.acquisition_public.customer_one_inc_policies AS cc_policy ON cc_policy.customer_id = cc_customer.id
             RIGHT JOIN clearcover_dw.oneinc.policy AS oi_policy ON cc_policy.one_inc_policy_id = oi_policy.policyid
