@@ -42,7 +42,7 @@ queries:
             FROM clearcover_dw.oneinc.policyterm AS policyterm
             INNER JOIN clearcover_dw.oneinc.policy ON clearcover_dw.oneinc.policy.policyid = policyterm.policyid
             LEFT JOIN clearcover_dw.acquisition_public.renewal_notices ON clearcover_dw.acquisition_public.renewal_notices.policy_id = policy.policyid
-            WHERE expirationdate <= current_timestamp + interval '40 days'
+            WHERE expirationdate <= current_timestamp + interval '39 days'
             AND clearcover_dw.acquisition_public.renewal_notices.policy_id IS NULL
             AND isInitialized = 't'"
     channel: "#renewal-tech"
