@@ -7,7 +7,7 @@ from prefect.schedules import Schedule
 from prefect.schedules.clocks import CronClock
 import snowflake.connector as sf
 
-schedule = Schedule(clocks=[CronClock("0 13 * * *")])
+schedule = Schedule(clocks=[CronClock("30 15 * * *")])
 schedule.next(5)
 
 @task
