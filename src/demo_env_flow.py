@@ -19,7 +19,7 @@ def execute_snowflake_query(report):
     password = s.get()
     connect_params = {
         "account": 'jh72176.us-east-1',
-        "user": config.dex_config.sfk_user,
+        "user": config.sfk_user,
         "password": password,
         "database": report.get('database', ''),
         "schema": report.get('schema', ''),
