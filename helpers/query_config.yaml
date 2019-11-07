@@ -77,7 +77,6 @@ queries:
               AND rnd.decision is NULL
               AND pts.policytermstatusname != 'NotWritten'
               AND pts2.policytermstatusname != 'NotWritten'"
-                "
     channel: "#renewal-tech"
   - query_name: "Renewals not sent on time "
     database: "clearcover_dw"
