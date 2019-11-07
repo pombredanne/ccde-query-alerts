@@ -63,12 +63,20 @@ queries:
   - query_name: "No decision and expiring in the next 24 days "
     database: "clearcover_dw"
     schema: "oneinc"
-    query: "SELECT * FROM clearcover_dw.oneinc.policyterm AS pt
+    query: "SELECT *
+            FROM clearcover_dw.oneinc.policyterm AS pt
             LEFT JOIN clearcover_dw.oneinc.policyrenewalstatus as prts ON prts.policyrenewalstatusid = pt.policyrenewalstatusid
             LEFT JOIN clearcover_dw.acquisition_public.renewal_notice_decisions AS rnd ON rnd.current_policy_term_id = pt.policytermid
             LEFT JOIN clearcover_dw.oneinc.currentpolicytermstaus AS cpts ON cpts.policytermid = pt.policytermid
             LEFT JOIN clearcover_dw.oneinc.policytermstatus AS pts ON pts.policytermstatusid = cpts.policytermstatusid
-            WHERE pt.expirationdate > current_date AND pt.expirationdate <= DATEADD(day, 24,current_date) AND rnd.decision is NULL AND pts.policytermstatusname != 'NotWritten' AND pt.policytermid != 23337"
+            LEFT JOIN clearcover_dw.oneinc.currentpolicytermstaus AS cpts2 ON cpts2.policytermid = pt.nextpolicytermid
+            LEFT JOIN clearcover_dw.oneinc.policytermstatus AS pts2 ON pts2.policytermstatusid = cpts2.policytermstatusid
+            WHERE 1 = 1
+              AND pt.expirationdate > current_date
+              AND pt.expirationdate <= DATEADD(day, 24,current_date)
+              AND rnd.decision is NULL
+              AND pts.policytermstatusname != 'NotWritten'
+              AND pts2.policytermstatusname != 'NotWritten'"
     channel: "#renewal-tech"
   - query_name: "Renewals not sent on time "
     database: "clearcover_dw"
