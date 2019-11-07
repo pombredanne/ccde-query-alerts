@@ -40,6 +40,6 @@ def execute_snowflake_query(report):
         raise error
 
 
-with Flow('query_alerts') as flow:
+with Flow('env var flow') as flow:
     queries = get_queries()
     executions = execute_snowflake_query.map(queries)
