@@ -219,3 +219,92 @@ queries:
             or lagged_email_column is null) and LOWER(lagged_email.last_email) != LOWER(cc_customer.email) and lagged_email.last_email = lagged_email.email)
             order by endorsement_created_at desc"
     channel: "#renewal-tech"
+  - query_name: "Clients with two active policies"
+    database: "clearcover_dw"
+    schema: "acquisition_public"
+    query: "with current_endorsement_emails as (
+                select
+                    pe.policy_id,
+                    'policy_endorsement' as email_source_table,
+                    pe.email_current as email
+                from policy_endorsement as pe
+                where pe.is_policy_current = TRUE
+            ),
+            oneinc_personal_customer_emails as (
+                select
+                    p.policy_id,
+                    'oneinc_personal_customer' as email_source_table,
+                    pc.email
+                from oneinc_policy as p
+                left join oneinc_personal_customer as pc
+                    on p.customer_id = pc.customer_id
+            ),
+            clearcover_customer_emails as (
+                select
+                    coip.oneinc_policy_id::integer as policy_id,
+                    'clearcover_customers' as email_source_table,
+                    c.email
+                from acquisition_customer_oneinc_policies as coip
+                left join acquisition_customers as c
+                    on coip.customer_id = c.customer_id
+            ),
+            email_union as (
+                select * from current_endorsement_emails
+                union
+                select * from oneinc_personal_customer_emails
+                union
+                select * from clearcover_customer_emails
+            ),
+            active_policies as (
+                select policy_id, policy_term_id from policy_endorsement where is_policy_current = TRUE and policy_term_status_name = 'Active'
+            ),
+            active_policy_union as (
+                select *
+                from email_union as e
+                inner join active_policies as a using (policy_id)
+            ),
+            policies_with_matching_emails as (
+                select distinct
+                    a1.policy_id as policy_id_1,
+                    a1.policy_term_id as policy_term_id_1,
+                    a2.policy_id as policy_id_2,
+                    a2.policy_term_id as policy_term_id_2
+                from active_policy_union as a1
+                inner join active_policy_union as a2
+                    on a1.email = a2.email
+                    and a1.policy_term_id < a2.policy_term_id
+            )
+            select
+                pwme.policy_id_1,
+                ptp1.policy_number as policy_number_1,
+                ptp1.policy_created_at,
+                ptp1.attributed_partner,
+                cee1.email as policy_1_current_endorsement_email,
+                opce1.email as policy_1_oneinc_personal_customer_email,
+                ccce1.email as policy_1_clearcover_customers_email,
+                pwme.policy_id_2,
+                ptp2.policy_number as policy_number_2,
+                ptp2.policy_created_at,
+                ptp2.attributed_partner,
+                cee2.email as policy_2_current_endorsement_email,
+                opce2.email as policy_2_oneinc_personal_customer_email,
+                ccce2.email as policy_2_clearcover_customers_email
+            from policies_with_matching_emails as pwme
+            left join policy_term_plus as ptp1
+                on pwme.policy_term_id_1 = ptp1.policy_term_id
+            left join policy_term_plus as ptp2
+                on pwme.policy_term_id_2 = ptp2.policy_term_id
+            left join current_endorsement_emails as cee1
+                on pwme.policy_id_1 = cee1.policy_id
+            left join current_endorsement_emails as cee2
+                on pwme.policy_id_2 = cee2.policy_id
+            left join oneinc_personal_customer_emails as opce1
+                on pwme.policy_id_1 = opce1.policy_id
+            left join oneinc_personal_customer_emails as opce2
+                on pwme.policy_id_2 = opce2.policy_id
+            left join clearcover_customer_emails as ccce1
+                on pwme.policy_id_1 = ccce1.policy_id
+            left join clearcover_customer_emails as ccce2
+                on pwme.policy_id_2 = ccce2.policy_id
+            order by 1"
+    channel: "#renewal-tech"
