@@ -39,7 +39,15 @@ def execute_snowflake_query(report):
         conn.close()
         raise error
 
+@task
+def print_task(data):
+    print(data)
+
 
 with Flow('env var flow') as flow:
+    a = print_task(config)
+    print(config)
     queries = get_queries()
-    executions = execute_snowflake_query.map(queries)
+    # executions = execute_snowflake_query.map(queries)
+
+flow.run()
