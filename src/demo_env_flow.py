@@ -1,10 +1,8 @@
 import yaml
 
-from prefect import Flow, task, config, utilities
+from prefect import Flow, task, config
 from prefect.client import Secret
 import snowflake.connector as sf
-
-LOGGER = utilities.logging.configure_logging(testing=False)
 
 
 @task
@@ -41,13 +39,7 @@ def execute_snowflake_query(report):
         conn.close()
         raise error
 
-@task
-def print_task(data):
-    LOGGER.info(data)
-    print(data)
-
 
 with Flow('env var flow') as flow:
-    a = print_task(config)
-    print(config)
-
+    queries = get_queries()
+    executions = execute_snowflake_query.map(queries)
