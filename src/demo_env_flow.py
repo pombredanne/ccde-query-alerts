@@ -1,8 +1,10 @@
 import yaml
 
-from prefect import Flow, task, config
+from prefect import Flow, task, config, utilities
 from prefect.client import Secret
 import snowflake.connector as sf
+
+LOGGER = utilities.logging.configure_logging(testing=False)
 
 
 @task
@@ -41,13 +43,11 @@ def execute_snowflake_query(report):
 
 @task
 def print_task(data):
+    LOGGER.info(data)
     print(data)
 
 
 with Flow('env var flow') as flow:
     a = print_task(config)
     print(config)
-    queries = get_queries()
-    # executions = execute_snowflake_query.map(queries)
 
-flow.run()
