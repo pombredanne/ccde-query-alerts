@@ -5,7 +5,7 @@ from prefect.client import Secret
 from prefect.schedules import Schedule
 from prefect.schedules.clocks import CronClock
 import snowflake.connector as sf
-from helpers.help import print_test
+
 
 schedule = Schedule(clocks=[CronClock("30 15 * * *")])
 schedule.next(5)
@@ -23,7 +23,6 @@ def get_queries():
 
 @task
 def execute_snowflake_query(report):
-    print_test('help')
     s = Secret("SNOWFLAKE-READ-ONLY-USER-PW")
     password = s.get()
     connect_params = {
@@ -52,5 +51,3 @@ def execute_snowflake_query(report):
 with Flow('query_alerts_test') as flow:
     queries = get_queries()
     executions = execute_snowflake_query.map(queries)
-
-flow.run()

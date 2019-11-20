@@ -7,7 +7,7 @@ from prefect.schedules import Schedule
 from prefect.schedules.clocks import CronClock
 import requests
 import snowflake.connector as sf
-from prefect.utilities.debug import is_serializable
+
 
 schedule = Schedule(clocks=[CronClock("30 15 * * *")])
 schedule.next(5)
@@ -76,5 +76,3 @@ with Flow('query_alerts', schedule) as flow:
     queries = get_queries()
     executions = execute_snowflake_query.map(queries)
     send_alerts = slack_query_alert.map(executions)
-
-print(is_serializable(flow))
