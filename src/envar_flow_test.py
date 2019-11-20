@@ -1,13 +1,11 @@
-import json
 import yaml
 
 from prefect import Flow, task, utilities
 from prefect.client import Secret
 from prefect.schedules import Schedule
 from prefect.schedules.clocks import CronClock
-import requests
 import snowflake.connector as sf
-from prefect.utilities.debug import is_serializable
+from helpers.help import print_test
 
 schedule = Schedule(clocks=[CronClock("30 15 * * *")])
 schedule.next(5)
@@ -17,7 +15,7 @@ LOGGER = utilities.logging.configure_logging(testing=False)
 
 @task
 def get_queries():
-    with open("src/helpers/query_config.yaml", 'r') as stream:
+    with open("helpers/query_config.yaml", 'r') as stream:
         data_loaded = yaml.safe_load(stream)
     reports = data_loaded['queries']
     return reports
@@ -25,6 +23,7 @@ def get_queries():
 
 @task
 def execute_snowflake_query(report):
+    print_test('help')
     s = Secret("SNOWFLAKE-READ-ONLY-USER-PW")
     password = s.get()
     connect_params = {
@@ -50,31 +49,8 @@ def execute_snowflake_query(report):
         raise error
 
 
-@task
-def slack_query_alert(query_execution):
-    row_count = query_execution[0]
-    report = query_execution[1]
-    if row_count > 0:
-        webhook_url = Secret("RENEWAL-TECH-SLACK-WH").get()
-
-        slack_data = {
-            "text": 'Alert for: ' + report['query_name'] + '\n' + "Current row count is " + str(row_count)
-        }
-
-        response = requests.post(
-            webhook_url, data=json.dumps(slack_data),
-            headers={'Content-Type': 'application/json'}
-        )
-        if response.status_code != 200:
-            LOGGER.exception(
-                'Request to slack returned an error %s, the response is:\n%s'
-                % (response.status_code, response.text)
-            )
-
-
-with Flow('query_alerts', schedule) as flow:
+with Flow('query_alerts_test') as flow:
     queries = get_queries()
     executions = execute_snowflake_query.map(queries)
-    send_alerts = slack_query_alert.map(executions)
 
-print(is_serializable(flow))
+flow.run()

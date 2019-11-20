@@ -31,7 +31,7 @@ oauthlib==3.1.0
 pandas==0.25.2
 partd==1.0.0
 pendulum==2.0.5
-prefect==0.7.1
+prefect==0.7.2
 psutil==5.6.3
 pycparser==2.19
 pycryptodomex==3.9.0
