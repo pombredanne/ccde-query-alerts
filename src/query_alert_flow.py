@@ -16,7 +16,7 @@ LOGGER = utilities.logging.configure_logging(testing=False)
 
 @task
 def get_queries():
-    with open("helpers/query_config.yaml", 'r') as stream:
+    with open("src/helpers/query_config.yaml", 'r') as stream:
         data_loaded = yaml.safe_load(stream)
     reports = data_loaded['queries']
     return reports
