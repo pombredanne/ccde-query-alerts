@@ -89,7 +89,8 @@ queries:
                   (decision = 'renew' ) AND DATEDIFF(day, customer_io_sent_at, expired_at) < 24.9
             AND renewal_notices.current_policy_term_id <> '23002'
             and expired_at <= current_timestamp
-            AND renewal_notices.created_at > '2019-06-07T11:05:32-06:00'"
+            AND renewal_notices.created_at > '2019-10-04'
+            ORDER BY expired_at"
     channel: "#renewal-tech"
   - query_name: "Renewals with no physical mail or customer IO sent"
     database: "clearcover_dw"
