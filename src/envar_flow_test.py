@@ -17,7 +17,7 @@ LOGGER = utilities.logging.configure_logging(testing=False)
 def get_queries():
     with open("helpers/query_config.yaml", 'r') as stream:
         data_loaded = yaml.safe_load(stream)
-    LOGGER.info(prefect.context.config.SFK_USER)
+    LOGGER.info(prefect.context.config.sfk_user)
     reports = data_loaded['queries']
     return reports
 
