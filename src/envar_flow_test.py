@@ -1,6 +1,6 @@
 import yaml
 
-from prefect import Flow, task, utilities
+from prefect import Flow, task, utilities, config
 from prefect.client import Secret
 from prefect.schedules import Schedule
 from prefect.schedules.clocks import CronClock
@@ -17,6 +17,7 @@ LOGGER = utilities.logging.configure_logging(testing=False)
 def get_queries():
     with open("helpers/query_config.yaml", 'r') as stream:
         data_loaded = yaml.safe_load(stream)
+    LOGGER.info(config.test_envar)
     reports = data_loaded['queries']
     return reports
 
